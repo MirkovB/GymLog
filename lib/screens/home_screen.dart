@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,8 +9,9 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('GymLog'),
-        backgroundColor: Color(0xFF808080),
+        backgroundColor: const Color(0xFF808080),
       ),
+      drawer: const AppDrawer(),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -18,12 +20,12 @@ class HomeScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 24),
               Text(
-                'Welcome to GymLog',
+                'Dobrodošli u GymLog',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 16),
               Text(
-                'Your personal workout tracker',
+                'Vaš lični trener za vežbanje',
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
