@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "671099368114",
+    "project_id": "gymlog-e6f44",
+    "storage_bucket": "gymlog-e6f44.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671099368114:android:207a3023e1c4dfecf14fab",
+        "android_client_info": {
+          "package_name": "com.example.gymlog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4nNZM_XrfxwZDZklizS0jHWnim8W9YaU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

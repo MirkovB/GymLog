@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/plans_screen.dart';
 import 'screens/sessions_screen.dart';
@@ -6,7 +8,11 @@ import 'screens/exercises_screen.dart';
 import 'screens/body_metrics_screen.dart';
 import 'screens/stats_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
