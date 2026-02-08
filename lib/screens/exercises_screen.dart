@@ -211,10 +211,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                               color: Colors.white, size: 20),
                         ),
                         title: Text(exercise.name),
-                        subtitle: exercise.personalRecord != null
-                            ? Text(
-                                'Rekord: ${exercise.personalRecord} kg')
-                            : const Text('Nema rekorda'),
+                        subtitle: Text(
+                          'Rekord: ${exercise.personalRecord ?? '-'} kg • Treninga: ${exercise.workoutCount} • Poslednji put: ${_formatLastDone(exercise.lastDone)}',
+                        ),
                         trailing: PopupMenuButton(
                           onSelected: (value) {
                             if (value == 'delete') {
@@ -247,6 +246,16 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       ),
     );
   }
+}
+
+String _formatLastDone(DateTime? date) {
+  if (date == null) {
+    return 'Nikad';
+  }
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  final year = date.year.toString();
+  return '$day.$month.$year';
 }
 
 class _ExerciseSearchDelegate extends SearchDelegate<String> {
@@ -303,9 +312,9 @@ class _ExerciseSearchDelegate extends SearchDelegate<String> {
             final exercise = filtered[index];
             return ListTile(
               title: Text(exercise.name),
-              subtitle: exercise.personalRecord != null
-                  ? Text('Rekord: ${exercise.personalRecord} kg')
-                  : const Text('Nema rekorda'),
+              subtitle: Text(
+                'Rekord: ${exercise.personalRecord ?? '-'} kg • Treninga: ${exercise.workoutCount} • Poslednji put: ${_formatLastDone(exercise.lastDone)}',
+              ),
               onTap: () {
                 close(context, exercise.name);
               },

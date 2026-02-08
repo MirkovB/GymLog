@@ -57,6 +57,7 @@ class Workout {
   final String dayName;
   final DateTime date;
   final Map<String, WorkoutExercise> exercises;
+  final int? durationSeconds;
 
   Workout({
     required this.id,
@@ -65,6 +66,7 @@ class Workout {
     required this.dayName,
     required this.date,
     required this.exercises,
+    this.durationSeconds,
   });
 
   factory Workout.fromMap(Map<String, dynamic> map, String id) {
@@ -82,6 +84,7 @@ class Workout {
       dayName: map['dayName'] as String,
       date: DateTime.parse(map['date'] as String),
       exercises: exercises,
+      durationSeconds: map['durationSeconds'] as int?,
     );
   }
 
@@ -97,6 +100,7 @@ class Workout {
       'dayName': dayName,
       'date': date.toIso8601String(),
       'exercises': exercisesMap,
+      'durationSeconds': durationSeconds,
     };
   }
 }

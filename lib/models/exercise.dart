@@ -3,12 +3,14 @@ class Exercise {
   final String name;
   final DateTime? lastDone;
   final double? personalRecord;
+  final int workoutCount;
 
   Exercise({
     required this.id,
     required this.name,
     this.lastDone,
     this.personalRecord,
+    this.workoutCount = 0,
   });
 
   factory Exercise.fromMap(Map<String, dynamic> map, String id) {
@@ -21,6 +23,7 @@ class Exercise {
       personalRecord: map['personalRecord'] != null
           ? (map['personalRecord'] as num).toDouble()
           : null,
+      workoutCount: map['workoutCount'] as int? ?? 0,
     );
   }
 
@@ -29,6 +32,7 @@ class Exercise {
       'name': name,
       'lastDone': lastDone?.toIso8601String(),
       'personalRecord': personalRecord,
+      'workoutCount': workoutCount,
     };
   }
 }

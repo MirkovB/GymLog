@@ -16,6 +16,7 @@ class FirebaseService {
         'name': name,
         'lastDone': null,
         'personalRecord': null,
+        'workoutCount': 0,
       });
       return docRef.id;
     } catch (e) {
@@ -53,8 +54,13 @@ class FirebaseService {
   }
 
  
-  Future<void> updateExercise(String userId, String exerciseId,
-      {double? personalRecord, DateTime? lastDone}) async {
+  Future<void> updateExercise(
+    String userId,
+    String exerciseId, {
+    double? personalRecord,
+    DateTime? lastDone,
+    bool incrementWorkoutCount = false,
+  }) async {
     try {
       final data = <String, dynamic>{};
       if (personalRecord != null) {
@@ -62,6 +68,9 @@ class FirebaseService {
       }
       if (lastDone != null) {
         data['lastDone'] = lastDone.toIso8601String();
+      }
+      if (incrementWorkoutCount) {
+        data['workoutCount'] = FieldValue.increment(1);
       }
 
       await _firestore
