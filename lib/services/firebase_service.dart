@@ -6,9 +6,6 @@ import '../models/workout.dart';
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ============ VEŽBE ============
-
-  /// Dodaj novu vežbu
   Future<String> addExercise(String userId, String name) async {
     try {
       final docRef = await _firestore
@@ -26,7 +23,6 @@ class FirebaseService {
     }
   }
 
-  /// Preuzmi sve vežbe
   Future<List<Exercise>> getExercises(String userId) async {
     try {
       final snapshot = await _firestore
@@ -43,7 +39,6 @@ class FirebaseService {
     }
   }
 
-  /// Obriši vežbu
   Future<void> deleteExercise(String userId, String exerciseId) async {
     try {
       await _firestore
@@ -57,7 +52,7 @@ class FirebaseService {
     }
   }
 
-  /// Ažuriraj vežbu (npr. novi rekord)
+ 
   Future<void> updateExercise(String userId, String exerciseId,
       {double? personalRecord, DateTime? lastDone}) async {
     try {
@@ -80,9 +75,7 @@ class FirebaseService {
     }
   }
 
-  // ============ PLANOVI ============
-
-  /// Dodaj novi plan
+  
   Future<String> addPlan(String userId, String title) async {
     try {
       final docRef = await _firestore
@@ -101,7 +94,7 @@ class FirebaseService {
     }
   }
 
-  /// Preuzmi sve planove
+
   Future<List<Plan>> getPlans(String userId) async {
     try {
       final snapshot = await _firestore
@@ -118,7 +111,7 @@ class FirebaseService {
     }
   }
 
-  /// Obriši plan
+
   Future<void> deletePlan(String userId, String planId) async {
     try {
       await _firestore
@@ -132,7 +125,19 @@ class FirebaseService {
     }
   }
 
-  /// Postavi dan u plan
+  Future<void> updatePlan(String userId, String planId, String newTitle) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('plans')
+          .doc(planId)
+          .update({'title': newTitle});
+    } catch (e) {
+      throw Exception('Greška pri ažuriranju plana: $e');
+    }
+  }
+
   Future<void> setPlanDay(
     String userId,
     String planId,
@@ -157,10 +162,8 @@ class FirebaseService {
     }
   }
 
-  /// Postavi aktivan plan
   Future<void> setActivePlan(String userId, String planId) async {
     try {
-      // Prvo deaktiviraj sve planove
       final allPlans = await getPlans(userId);
       for (var plan in allPlans) {
         if (plan.isActive) {
@@ -173,7 +176,6 @@ class FirebaseService {
         }
       }
 
-      // Onda aktiviraj novi
       await _firestore
           .collection('users')
           .doc(userId)
@@ -185,7 +187,6 @@ class FirebaseService {
     }
   }
 
-  /// Preuzmi aktivni plan
   Future<Plan?> getActivePlan(String userId) async {
     try {
       final snapshot = await _firestore
@@ -206,9 +207,7 @@ class FirebaseService {
     }
   }
 
-  // ============ TRENINZI ============
 
-  /// Spremi trening
   Future<String> saveWorkout(String userId, Workout workout) async {
     try {
       final docRef = await _firestore
@@ -222,7 +221,6 @@ class FirebaseService {
     }
   }
 
-  /// Preuzmi sve treninge
   Future<List<Workout>> getWorkouts(String userId) async {
     try {
       final snapshot = await _firestore
@@ -240,7 +238,6 @@ class FirebaseService {
     }
   }
 
-  /// Preuzmi treninge za određeni datum
   Future<List<Workout>> getWorkoutsByDate(
       String userId, DateTime date) async {
     try {
