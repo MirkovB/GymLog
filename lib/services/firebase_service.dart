@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/body_metric.dart';
 import '../models/exercise.dart';
 import '../models/plan.dart';
 import '../models/workout.dart';
@@ -13,11 +14,11 @@ class FirebaseService {
           .doc(userId)
           .collection('exercises')
           .add({
-        'name': name,
-        'lastDone': null,
-        'personalRecord': null,
-        'workoutCount': 0,
-      });
+            'name': name,
+            'lastDone': null,
+            'personalRecord': null,
+            'workoutCount': 0,
+          });
       return docRef.id;
     } catch (e) {
       throw Exception('Greška pri dodavanju vežbe: $e');
@@ -53,7 +54,6 @@ class FirebaseService {
     }
   }
 
- 
   Future<void> updateExercise(
     String userId,
     String exerciseId, {
@@ -84,7 +84,6 @@ class FirebaseService {
     }
   }
 
-  
   Future<String> addPlan(String userId, String title) async {
     try {
       final docRef = await _firestore
@@ -92,17 +91,16 @@ class FirebaseService {
           .doc(userId)
           .collection('plans')
           .add({
-        'title': title,
-        'days': {},
-        'isActive': false,
-        'createdAt': DateTime.now().toIso8601String(),
-      });
+            'title': title,
+            'days': {},
+            'isActive': false,
+            'createdAt': DateTime.now().toIso8601String(),
+          });
       return docRef.id;
     } catch (e) {
       throw Exception('Greška pri dodavanju plana: $e');
     }
   }
-
 
   Future<List<Plan>> getPlans(String userId) async {
     try {
@@ -119,7 +117,6 @@ class FirebaseService {
       throw Exception('Greška pri preuzimanju planova: $e');
     }
   }
-
 
   Future<void> deletePlan(String userId, String planId) async {
     try {
@@ -161,11 +158,8 @@ class FirebaseService {
           .collection('plans')
           .doc(planId)
           .update({
-        'days.$dayKey': {
-          'name': dayName,
-          'exerciseIds': exerciseIds,
-        }
-      });
+            'days.$dayKey': {'name': dayName, 'exerciseIds': exerciseIds},
+          });
     } catch (e) {
       throw Exception('Greška pri postavljanju dana u plan: $e');
     }
@@ -216,7 +210,6 @@ class FirebaseService {
     }
   }
 
-
   Future<String> saveWorkout(String userId, Workout workout) async {
     try {
       final docRef = await _firestore
@@ -247,8 +240,7 @@ class FirebaseService {
     }
   }
 
-  Future<List<Workout>> getWorkoutsByDate(
-      String userId, DateTime date) async {
+  Future<List<Workout>> getWorkoutsByDate(String userId, DateTime date) async {
     try {
       final startOfDay = DateTime(date.year, date.month, date.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
@@ -267,5 +259,53 @@ class FirebaseService {
     } catch (e) {
       throw Exception('Greška pri preuzimanju treninga za datum: $e');
     }
+  }
+
+  Future<String> addBodyMetric(
+    String userId,
+    double weight,
+    DateTime date,
+  ) async {
+    try {
+      final docRef = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('bodyMetrics')
+          .add({'weight': weight, 'date': date.toIso8601String()});
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Greška pri dodavanju mere: $e');
+    }
+  }
+
+  Future<List<BodyMetric>> getBodyMetrics(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('bodyMetrics')
+          .orderBy('date', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => BodyMetric.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw Exception('Greška pri preuzimanju mera: $e');
+    }
+  }
+
+  Stream<List<BodyMetric>> watchBodyMetrics(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('bodyMetrics')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => BodyMetric.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 }
