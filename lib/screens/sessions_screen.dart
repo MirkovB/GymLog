@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/app_drawer.dart';
 import '../models/workout.dart';
 import '../services/firebase_service.dart';
+import '../providers/user_provider.dart';
 import 'start_workout_screen.dart';
 import 'workout_detail_screen.dart';
 
@@ -14,18 +16,21 @@ class SessionsScreen extends StatefulWidget {
 
 class _SessionsScreenState extends State<SessionsScreen> {
   final FirebaseService _firebaseService = FirebaseService();
-  final String _userId = 'test-user-1';
   late Future<List<Workout>> _workoutsFuture;
 
   @override
   void initState() {
     super.initState();
-    _workoutsFuture = _firebaseService.getWorkouts(_userId);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user';
+    _workoutsFuture = _firebaseService.getWorkouts(userId);
   }
 
   void _refreshWorkouts() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user';
     setState(() {
-      _workoutsFuture = _firebaseService.getWorkouts(_userId);
+      _workoutsFuture = _firebaseService.getWorkouts(userId);
     });
   }
 
@@ -51,14 +56,38 @@ class _SessionsScreenState extends State<SessionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final isGuest = userProvider.user == null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Treninzi'),
+        title: Text(isGuest ? 'Treninzi (Pregled)' : 'Treninzi'),
         backgroundColor: const Color(0xFF808080),
       ),
       drawer: const AppDrawer(),
-      body: FutureBuilder<List<Workout>>(
-        future: _workoutsFuture,
+      body: Column(
+        children: [
+          if (isGuest)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: Colors.orange[100],
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Prijavite se da biste kreirali i pratili treninge',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: FutureBuilder<List<Workout>>(
+              future: _workoutsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -121,12 +150,14 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
+                    final userProvider = Provider.of<UserProvider>(context, listen: false);
+                    final userId = userProvider.user?.id ?? '';
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => WorkoutDetailScreen(
                           workout: workout,
-                          userId: _userId,
+                          userId: userId,
                         ),
                       ),
                     );
@@ -136,28 +167,35 @@ class _SessionsScreenState extends State<SessionsScreen> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => StartWorkoutScreen(userId: _userId),
             ),
-          ).then((_) => _refreshWorkouts());
-        },
-        backgroundColor: const Color(0xFF808080),
-        icon: Icon(
-          StartWorkoutScreen.hasDraft()
-              ? Icons.play_circle_fill
-              : Icons.play_arrow,
-        ),
-        label: Text(
-          StartWorkoutScreen.hasDraft()
-              ? 'Nastavi trening'
-              : 'Započni trening',
-        ),
+          ),
+        ],
       ),
+      floatingActionButton: isGuest
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () {
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                final userId = userProvider.user?.id ?? '';
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StartWorkoutScreen(userId: userId),
+                  ),
+                ).then((_) => _refreshWorkouts());
+              },
+              backgroundColor: const Color(0xFF808080),
+              icon: Icon(
+                StartWorkoutScreen.hasDraft()
+                    ? Icons.play_circle_fill
+                    : Icons.play_arrow,
+              ),
+              label: Text(
+                StartWorkoutScreen.hasDraft()
+                    ? 'Nastavi trening'
+                    : 'Započni trening',
+              ),
+            ),
     );
   }
 }

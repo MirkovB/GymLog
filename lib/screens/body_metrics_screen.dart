@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/body_metric.dart';
 import '../services/firebase_service.dart';
+import '../providers/user_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class BodyMetricsScreen extends StatefulWidget {
@@ -12,9 +14,13 @@ class BodyMetricsScreen extends StatefulWidget {
 
 class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
   final FirebaseService _firebaseService = FirebaseService();
-  final String _userId = 'test-user-1';
 
   void _showAddMetricDialog() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id;
+    
+    if (userId == null) return;
+
     final TextEditingController controller = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
@@ -83,7 +89,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
 
                 try {
                   await _firebaseService.addBodyMetric(
-                    _userId,
+                    userId,
                     weight,
                     selectedDate,
                   );
@@ -109,6 +115,21 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final userId = userProvider.user?.id;
+
+    if (userId == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Telesne Mere'),
+          backgroundColor: const Color(0xFF808080),
+        ),
+        body: const Center(
+          child: Text('Morate biti prijavljeni da biste pristupili ovoj stranici.'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Telesne Mere'),
@@ -116,7 +137,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
       ),
       drawer: const AppDrawer(),
       body: StreamBuilder<List<BodyMetric>>(
-        stream: _firebaseService.watchBodyMetrics(_userId),
+        stream: _firebaseService.watchBodyMetrics(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

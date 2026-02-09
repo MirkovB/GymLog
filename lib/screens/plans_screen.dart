@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/app_drawer.dart';
 import '../models/plan.dart';
 import '../services/firebase_service.dart';
+import '../providers/user_provider.dart';
 import 'plan_detail_screen.dart';
 
 class PlansScreen extends StatefulWidget {
@@ -13,23 +15,28 @@ class PlansScreen extends StatefulWidget {
 
 class _PlansScreenState extends State<PlansScreen> {
   final FirebaseService _firebaseService = FirebaseService();
-  final String _userId = 'test-user-1';
   late Future<List<Plan>> _plansFuture;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _plansFuture = _firebaseService.getPlans(_userId);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user';
+    _plansFuture = _firebaseService.getPlans(userId);
   }
 
   void _refreshPlans() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user';
     setState(() {
-      _plansFuture = _firebaseService.getPlans(_userId);
+      _plansFuture = _firebaseService.getPlans(userId);
     });
   }
 
   void _showAddPlanDialog() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
     final TextEditingController controller = TextEditingController();
 
     showDialog(
@@ -57,7 +64,7 @@ class _PlansScreenState extends State<PlansScreen> {
             onPressed: () async {
               if (controller.text.isNotEmpty) {
                 try {
-                  await _firebaseService.addPlan(_userId, controller.text);
+                  await _firebaseService.addPlan(userId, controller.text);
                   if (!context.mounted) return;
                   Navigator.pop(context);
                   _refreshPlans();
@@ -80,6 +87,8 @@ class _PlansScreenState extends State<PlansScreen> {
   }
 
   void _showEditPlanDialog(Plan plan) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
     final TextEditingController controller =
         TextEditingController(text: plan.title);
 
@@ -110,7 +119,7 @@ class _PlansScreenState extends State<PlansScreen> {
                   controller.text != plan.title) {
                 try {
                   await _firebaseService.updatePlan(
-                      _userId, plan.id, controller.text);
+                      userId, plan.id, controller.text);
                   if (!context.mounted) return;
                   Navigator.pop(context);
                   _refreshPlans();
@@ -135,11 +144,14 @@ class _PlansScreenState extends State<PlansScreen> {
   }
 
   void _deletePlan(String planId) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Obriši plan'),
-        content: const Text('Da li si siguran da želiš da obrišeš ovaj plan?'),
+        title: const Text('Brisanje plana'),
+        content: const Text('Da li ste sigurni da želite da obrišete ovaj plan?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -151,7 +163,7 @@ class _PlansScreenState extends State<PlansScreen> {
             ),
             onPressed: () async {
               try {
-                await _firebaseService.deletePlan(_userId, planId);
+                await _firebaseService.deletePlan(userId, planId);
                 if (!context.mounted) return;
                 Navigator.pop(context);
                 _refreshPlans();
@@ -173,6 +185,9 @@ class _PlansScreenState extends State<PlansScreen> {
   }
 
   void _toggleActivePlan(Plan plan) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
+    
     try {
       if (plan.isActive) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -181,7 +196,7 @@ class _PlansScreenState extends State<PlansScreen> {
         return;
       }
 
-      await _firebaseService.setActivePlan(_userId, plan.id);
+      await _firebaseService.setActivePlan(userId, plan.id);
       _refreshPlans();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,14 +220,35 @@ class _PlansScreenState extends State<PlansScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final isGuest = userProvider.user == null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Planovi'),
+        title: Text(isGuest ? 'Planovi (Pregled)' : 'Planovi'),
         backgroundColor: const Color(0xFF808080),
       ),
       drawer: const AppDrawer(),
       body: Column(
         children: [
+          if (isGuest)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: Colors.orange[100],
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Prijavite se da biste kreirali svoje planove',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -381,12 +417,14 @@ class _PlansScreenState extends State<PlansScreen> {
                           ],
                         ),
                         onTap: () {
+                          final userProvider = Provider.of<UserProvider>(context, listen: false);
+                          final userId = userProvider.user?.id ?? '';
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => PlanDetailScreen(
                                 plan: plan,
-                                userId: _userId,
+                                userId: userId,
                               ),
                             ),
                           );
@@ -400,11 +438,13 @@ class _PlansScreenState extends State<PlansScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddPlanDialog,
-        backgroundColor: const Color(0xFF808080),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: isGuest
+          ? null
+          : FloatingActionButton(
+              onPressed: _showAddPlanDialog,
+              backgroundColor: const Color(0xFF808080),
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }

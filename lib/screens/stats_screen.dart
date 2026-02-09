@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/body_metric.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/firebase_service.dart';
+import '../providers/user_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -14,7 +16,6 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   final FirebaseService _firebaseService = FirebaseService();
-  final String _userId = 'test-user-1';
   late Future<_StatsData> _statsFuture;
 
   @override
@@ -24,9 +25,11 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<_StatsData> _loadStats() async {
-    final workouts = await _firebaseService.getWorkouts(_userId);
-    final metrics = await _firebaseService.getBodyMetrics(_userId);
-    final exercises = await _firebaseService.getExercises(_userId);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user';
+    final workouts = await _firebaseService.getWorkouts(userId);
+    final metrics = await _firebaseService.getBodyMetrics(userId);
+    final exercises = await _firebaseService.getExercises(userId);
 
     final totalWorkouts = workouts.length;
     final totalWeeks = _calculateWeeks(workouts);

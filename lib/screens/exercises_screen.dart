@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/app_drawer.dart';
 import '../models/exercise.dart';
 import '../services/firebase_service.dart';
+import '../providers/user_provider.dart';
 
 class ExercisesScreen extends StatefulWidget {
   const ExercisesScreen({super.key});
@@ -12,23 +14,28 @@ class ExercisesScreen extends StatefulWidget {
 
 class _ExercisesScreenState extends State<ExercisesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
-  final String _userId = 'test-user-1'; 
   late Future<List<Exercise>> _exercisesFuture;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _exercisesFuture = _firebaseService.getExercises(_userId);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user'; // Demo user za goste
+    _exercisesFuture = _firebaseService.getExercises(userId);
   }
 
   void _refreshExercises() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? 'demo-user';
     setState(() {
-      _exercisesFuture = _firebaseService.getExercises(_userId);
+      _exercisesFuture = _firebaseService.getExercises(userId);
     });
   }
 
   void _showAddExerciseDialog() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
     final TextEditingController controller = TextEditingController();
 
     showDialog(
@@ -56,7 +63,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
             onPressed: () async {
               if (controller.text.isNotEmpty) {
                 try {
-                  await _firebaseService.addExercise(_userId, controller.text);
+                  await _firebaseService.addExercise(userId, controller.text);
                   if (!context.mounted) return;
                   Navigator.pop(context);
                   _refreshExercises();
@@ -76,11 +83,14 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   }
 
   void _deleteExercise(String exerciseId) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Obriši vežbu'),
-        content: const Text('Da li si siguran da želiš da obrišeš ovu vežbu?'),
+        title: const Text('Brisanje vežbe'),
+        content: const Text('Da li ste sigurni da želite da obrišete ovu vežbu?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -92,7 +102,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
             ),
             onPressed: () async {
               try {
-                await _firebaseService.deleteExercise(_userId, exerciseId);
+                await _firebaseService.deleteExercise(userId, exerciseId);
                 if (!context.mounted) return;
                 Navigator.pop(context);
                 _refreshExercises();
@@ -112,9 +122,12 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final isGuest = userProvider.user == null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vežbe'),
+        title: Text(isGuest ? 'Vežbe (Pregled)' : 'Vežbe'),
         backgroundColor: const Color(0xFF808080),
         actions: [
           IconButton(
@@ -131,6 +144,24 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       drawer: const AppDrawer(),
       body: Column(
         children: [
+          if (isGuest)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: Colors.orange[100],
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Prijavite se da biste dodali svoje vežbe',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -214,19 +245,21 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                         subtitle: Text(
                           'Rekord: ${exercise.personalRecord ?? '-'} kg • Treninga: ${exercise.workoutCount} • Poslednji put: ${_formatLastDone(exercise.lastDone)}',
                         ),
-                        trailing: PopupMenuButton(
-                          onSelected: (value) {
-                            if (value == 'delete') {
-                              _deleteExercise(exercise.id);
-                            }
-                          },
-                          itemBuilder: (BuildContext context) => [
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Obriši'),
-                            ),
-                          ],
-                        ),
+                        trailing: isGuest
+                            ? null
+                            : PopupMenuButton(
+                                onSelected: (value) {
+                                  if (value == 'delete') {
+                                    _deleteExercise(exercise.id);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Obriši'),
+                                  ),
+                                ],
+                              ),
                         onTap: () {
                        
                         },
@@ -239,11 +272,13 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddExerciseDialog,
-        backgroundColor: const Color(0xFF808080),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: isGuest
+          ? null
+          : FloatingActionButton(
+              onPressed: _showAddExerciseDialog,
+              backgroundColor: const Color(0xFF808080),
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }
