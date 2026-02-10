@@ -44,7 +44,6 @@ class AuthService {
         throw Exception('Greška pri kreiranju korisnika.');
       }
 
-   
       if (displayName != null) {
         await user.updateDisplayName(displayName);
       }
@@ -53,7 +52,7 @@ class AuthService {
         id: user.uid,
         email: email,
         displayName: displayName,
-        role: UserRole.user, 
+        role: UserRole.user,
         createdAt: DateTime.now(),
         lastLogin: DateTime.now(),
       );
@@ -62,6 +61,41 @@ class AuthService {
 
       return userModel;
     } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        try {
+          final signInResult = await _auth.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+
+          final user = signInResult.user;
+          if (user == null) {
+            throw Exception('Greška pri prijavljivanju.');
+          }
+
+          if (displayName != null && (user.displayName == null || user.displayName!.isEmpty)) {
+            await user.updateDisplayName(displayName);
+          }
+
+          final userModel = UserModel(
+            id: user.uid,
+            email: email,
+            displayName: displayName,
+            role: UserRole.user,
+            createdAt: DateTime.now(),
+            lastLogin: DateTime.now(),
+          );
+
+          await _firestore
+              .collection('users')
+              .doc(user.uid)
+              .set(userModel.toMap(), SetOptions(merge: true));
+
+          return userModel;
+        } on FirebaseAuthException catch (signInError) {
+          throw _handleAuthException(signInError);
+        }
+      }
       throw _handleAuthException(e);
     } catch (e) {
       throw Exception('Greška pri registraciji: $e');

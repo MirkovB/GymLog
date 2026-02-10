@@ -30,9 +30,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading) return;
 
     setState(() => _isLoading = true);
+
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     try {
       await _authService.register(
@@ -51,6 +56,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           backgroundColor: Colors.green,
         ),
       );
+
+      Navigator.pushReplacementNamed(context, '/home');
 
     } catch (e) {
       if (!mounted) return;

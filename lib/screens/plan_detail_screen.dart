@@ -48,7 +48,17 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
   void initState() {
     super.initState();
     _days = Map.from(widget.plan.days);
-    _exercisesFuture = _firebaseService.getExercises(widget.userId);
+    
+    // Inicijalizuj sve dane čak i ako nisu u planu
+    for (int i = 0; i < _weekDaysKeys.length; i++) {
+      final dayKey = _weekDaysKeys[i];
+      if (!_days.containsKey(dayKey)) {
+        _days[dayKey] = PlanDay(name: '', exerciseIds: []);
+      }
+    }
+    
+    // Učitaj javne i korisničke vežbe
+    _exercisesFuture = _loadAllExercises();
     _dayTitleControllers = {};
 
     // Inicijalizuj kontrolere za sve dane
@@ -58,6 +68,12 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
         text: _days[dayKey]?.name ?? '',
       );
     }
+  }
+
+  Future<List<Exercise>> _loadAllExercises() async {
+    final publicExercises = await _firebaseService.getPublicExercises();
+    final userExercises = await _firebaseService.getExercises(widget.userId);
+    return [...publicExercises, ...userExercises];
   }
 
   @override
@@ -185,10 +201,10 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     try {
       for (var dayKey in _weekDaysKeys) {
         final dayTitle = _dayTitleControllers[dayKey]!.text;
-        
-        if (dayTitle.isNotEmpty || (_days[dayKey]?.exerciseIds.isNotEmpty ?? false)) {
-          final exerciseIds = _days[dayKey]?.exerciseIds ?? [];
+        final exerciseIds = _days[dayKey]?.exerciseIds ?? [];
 
+        // Čuva dan ako ima naslov ILI ima vežbi
+        if (dayTitle.isNotEmpty || exerciseIds.isNotEmpty) {
           await _firebaseService.setPlanDay(
             widget.userId,
             widget.plan.id,
@@ -270,20 +286,22 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              
+                  Text(
+                    dayLabel,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF808080),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _dayTitleControllers[dayKey],
                     decoration: InputDecoration(
-                      hintText: 'Npr. Push, Pull, Odmor...',
-                      labelText: dayLabel,
-                      labelStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      hintText: 'npr. Push, Pull, Odmor, Leg Day...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      prefixIcon: const Icon(Icons.label),
                     ),
                   ),
                   const SizedBox(height: 12),

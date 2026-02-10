@@ -6,10 +6,12 @@ import 'firebase_options.dart';
 import 'providers/user_provider.dart';
 import 'widgets/auth_wrapper.dart';
 import 'widgets/auth_guard.dart';
+import 'widgets/admin_guard.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/guest_home_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/admin_screen.dart';
 import 'screens/plans_screen.dart';
 import 'screens/sessions_screen.dart';
 import 'screens/exercises_screen.dart';
@@ -54,6 +56,8 @@ class MyApp extends StatelessWidget {
           '/exercises': (context) => const ExercisesScreen(), // Gost može videti
           '/body-metrics': (context) => AuthenticatedRoute(builder: (_) => const BodyMetricsScreen()),
           '/stats': (context) => const StatsScreen(), // Gost može videti
+          // Admin rute - pristup samo za admin korisnike
+          '/admin': (context) => AdminRoute(builder: (_) => const AdminScreen()),
         },
       ),
     );

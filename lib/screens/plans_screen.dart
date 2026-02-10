@@ -21,16 +21,29 @@ class _PlansScreenState extends State<PlansScreen> {
   @override
   void initState() {
     super.initState();
+    _refreshPlans();
+  }
+
+  Future<List<Plan>> _loadPlans() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.user?.id ?? 'demo-user';
-    _plansFuture = _firebaseService.getPlans(userId);
+    final userId = userProvider.user?.id;
+    
+    // Učitaj javne planove
+    final publicPlans = await _firebaseService.getPublicPlans();
+    
+    // Ako je korisnik prijavljen, učitaj i njegove planove
+    if (userId != null) {
+      final userPlans = await _firebaseService.getPlans(userId);
+      return [...publicPlans, ...userPlans];
+    }
+    
+    // Za goste, samo javni planovi
+    return publicPlans;
   }
 
   void _refreshPlans() {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.user?.id ?? 'demo-user';
     setState(() {
-      _plansFuture = _firebaseService.getPlans(userId);
+      _plansFuture = _loadPlans();
     });
   }
 

@@ -4,6 +4,9 @@ enum UserRole {
   admin,
 }
 
+// Hardkodovani admin emaili
+const List<String> ADMIN_EMAILS = ['admin@test.com'];
+
 class UserModel {
   final String id;
   final String email;
@@ -22,11 +25,17 @@ class UserModel {
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
+    final email = map['email'] ?? '';
+    
+    // Proveravamo da li je mejl u admin listi
+    final isAdmin = ADMIN_EMAILS.contains(email);
+    final role = isAdmin ? UserRole.admin : _parseRole(map['role']);
+    
     return UserModel(
       id: id,
-      email: map['email'] ?? '',
+      email: email,
       displayName: map['displayName'],
-      role: _parseRole(map['role']),
+      role: role,
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),

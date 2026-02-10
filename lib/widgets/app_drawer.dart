@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../models/user_model.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -51,12 +52,16 @@ class AppDrawer extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green[700],
+                              color: user.role == UserRole.admin
+                                  ? Colors.red[700]
+                                  : Colors.green[700],
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              'KORISNIK',
-                              style: TextStyle(
+                            child: Text(
+                              user.role == UserRole.admin
+                                  ? 'ADMIN'
+                                  : 'KORISNIK',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -119,6 +124,31 @@ class AppDrawer extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, '/stats');
                 },
               ),
+
+              // Admin panel - samo za admin korisnike
+              if (user != null && user.role == UserRole.admin)
+                ...<Widget>[
+                const Divider(),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: const Text(
+                    'ADMIN',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.admin_panel_settings, color: Colors.red),
+                  title: const Text('Admin Panel'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacementNamed(context, '/admin');
+                  },
+                ),
+              ],
 
               const Divider(),
 

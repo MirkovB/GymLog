@@ -308,4 +308,103 @@ class FirebaseService {
               .toList(),
         );
   }
+
+  // ===== Javne vežbe (Public Exercises) =====
+  
+  Future<String> addPublicExercise(String name) async {
+    try {
+      final docRef = await _firestore.collection('publicExercises').add({
+        'name': name,
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Greška pri dodavanju javne vežbe: $e');
+    }
+  }
+
+  Future<List<Exercise>> getPublicExercises() async {
+    try {
+      final snapshot = await _firestore
+          .collection('publicExercises')
+          .orderBy('name')
+          .get();
+
+      return snapshot.docs
+          .map((doc) => Exercise.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw Exception('Greška pri preuzimanju javnih vežbi: $e');
+    }
+  }
+
+  Stream<List<Exercise>> watchPublicExercises() {
+    return _firestore
+        .collection('publicExercises')
+        .orderBy('name')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Exercise.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  Future<void> deletePublicExercise(String exerciseId) async {
+    try {
+      await _firestore
+          .collection('publicExercises')
+          .doc(exerciseId)
+          .delete();
+    } catch (e) {
+      throw Exception('Greška pri brisanju javne vežbe: $e');
+    }
+  }
+
+  // ===== Javni planovi (Public Plans) =====
+  
+  Future<String> addPublicPlan(String title) async {
+    try {
+      final docRef = await _firestore.collection('publicPlans').add({
+        'title': title,
+        'days': {},
+        'isActive': false,
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+      return docRef.id;
+    } catch (e) {
+      throw Exception('Greška pri dodavanju javnog plana: $e');
+    }
+  }
+
+  Future<List<Plan>> getPublicPlans() async {
+    try {
+      final snapshot = await _firestore
+          .collection('publicPlans')
+          .orderBy('title')
+          .get();
+
+      return snapshot.docs
+          .map((doc) => Plan.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw Exception('Greška pri preuzimanju javnih planova: $e');
+    }
+  }
+
+  Stream<List<Plan>> watchPublicPlans() {
+    return _firestore
+        .collection('publicPlans')
+        .orderBy('title')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Plan.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  Future<void> deletePublicPlan(String planId) async {
+    try {
+      await _firestore.collection('publicPlans').doc(planId).delete();
+    } catch (e) {
+      throw Exception('Greška pri brisanju javnog plana: $e');
+    }
+  }
 }

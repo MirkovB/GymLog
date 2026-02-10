@@ -20,16 +20,29 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   @override
   void initState() {
     super.initState();
+    _refreshExercises();
+  }
+
+  Future<List<Exercise>> _loadExercises() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.user?.id ?? 'demo-user'; // Demo user za goste
-    _exercisesFuture = _firebaseService.getExercises(userId);
+    final userId = userProvider.user?.id;
+    
+    // Učitaj javne vežbe
+    final publicExercises = await _firebaseService.getPublicExercises();
+    
+    // Ako je korisnik prijavljen, učitaj i njegove vežbe
+    if (userId != null) {
+      final userExercises = await _firebaseService.getExercises(userId);
+      return [...publicExercises, ...userExercises];
+    }
+    
+    // Za goste, samo javne vežbe
+    return publicExercises;
   }
 
   void _refreshExercises() {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.user?.id ?? 'demo-user';
     setState(() {
-      _exercisesFuture = _firebaseService.getExercises(userId);
+      _exercisesFuture = _loadExercises();
     });
   }
 
