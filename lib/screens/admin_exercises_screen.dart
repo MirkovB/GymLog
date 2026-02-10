@@ -40,7 +40,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
     try {
       await _firebaseService.addPublicExercise(_nameController.text.trim());
       _nameController.clear();
-      
+
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,10 +52,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Greška: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -83,7 +80,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
 
     try {
       await _firebaseService.deletePublicExercise(exerciseId);
-      
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -94,12 +91,68 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Greška: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
       );
     }
+  }
+
+  void _showEditExerciseDialog(Exercise exercise) {
+    final TextEditingController controller = TextEditingController(
+      text: exercise.name,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Izmeni vežbu'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Naziv vežbe'),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Otkaži'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isEmpty || newName == exercise.name) {
+                Navigator.pop(context);
+                return;
+              }
+
+              try {
+                await _firebaseService.updatePublicExercise(
+                  exercise.id,
+                  newName,
+                );
+
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vežba je izmenjena'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Greška: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Sačuvaj'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAddExerciseDialog() {
@@ -122,10 +175,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Otkaži'),
           ),
-          TextButton(
-            onPressed: _addExercise,
-            child: const Text('Dodaj'),
-          ),
+          TextButton(onPressed: _addExercise, child: const Text('Dodaj')),
         ],
       ),
     );
@@ -154,8 +204,11 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.fitness_center,
-                      size: 64, color: Colors.grey),
+                  const Icon(
+                    Icons.fitness_center,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(height: 16),
                   const Text('Nema javnih vežbi'),
                   const SizedBox(height: 24),
@@ -180,14 +233,45 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  leading: const Icon(Icons.fitness_center,
-                      color: Color(0xFF808080)),
+                  leading: const Icon(
+                    Icons.fitness_center,
+                    color: Color(0xFF808080),
+                  ),
                   title: Text(exercise.name),
                   subtitle: const Text('Javna vežba'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () =>
-                        _deleteExercise(exercise.id, exercise.name),
+                  trailing: PopupMenuButton(
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'edit':
+                          _showEditExerciseDialog(exercise);
+                          break;
+                        case 'delete':
+                          _deleteExercise(exercise.id, exercise.name);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 18),
+                            SizedBox(width: 8),
+                            Text('Izmeni'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Obriši', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );

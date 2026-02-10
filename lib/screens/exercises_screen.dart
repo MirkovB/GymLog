@@ -16,6 +16,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   late Future<List<Exercise>> _exercisesFuture;
   String _searchQuery = '';
+  Set<String> _publicExerciseIds = {};
 
   @override
   void initState() {
@@ -26,16 +27,17 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   Future<List<Exercise>> _loadExercises() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user?.id;
-    
+
     // Učitaj javne vežbe
     final publicExercises = await _firebaseService.getPublicExercises();
-    
+    _publicExerciseIds = publicExercises.map((exercise) => exercise.id).toSet();
+
     // Ako je korisnik prijavljen, učitaj i njegove vežbe
     if (userId != null) {
       final userExercises = await _firebaseService.getExercises(userId);
       return [...publicExercises, ...userExercises];
     }
-    
+
     // Za goste, samo javne vežbe
     return publicExercises;
   }
@@ -59,9 +61,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           controller: controller,
           decoration: InputDecoration(
             hintText: 'Naziv vežbe',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         actions: [
@@ -82,9 +82,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                   _refreshExercises();
                 } catch (e) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Greška: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Greška: $e')));
                 }
               }
             },
@@ -98,21 +98,22 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   void _deleteExercise(String exerciseId) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user?.id ?? '';
-    
+    if (userId.isEmpty) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Brisanje vežbe'),
-        content: const Text('Da li ste sigurni da želite da obrišete ovu vežbu?'),
+        content: const Text(
+          'Da li ste sigurni da želite da obrišete ovu vežbu?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Ne'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               try {
                 await _firebaseService.deleteExercise(userId, exerciseId);
@@ -121,9 +122,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                 _refreshExercises();
               } catch (e) {
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Greška: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Greška: $e')));
               }
             },
             child: const Text('Obriši'),
@@ -221,8 +222,10 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
 
                 final exercises = snapshot.data ?? [];
                 final filteredExercises = exercises
-                    .where((exercise) =>
-                        exercise.name.toLowerCase().contains(_searchQuery))
+                    .where(
+                      (exercise) =>
+                          exercise.name.toLowerCase().contains(_searchQuery),
+                    )
                     .toList();
 
                 if (filteredExercises.isEmpty) {
@@ -230,12 +233,17 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.fitness_center,
-                            size: 64, color: Colors.grey),
+                        const Icon(
+                          Icons.fitness_center,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 16),
-                        Text(_searchQuery.isEmpty
-                            ? 'Nema vežbi. Dodaj novu!'
-                            : 'Nema rezultata pretrage'),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Nema vežbi. Dodaj novu!'
+                              : 'Nema rezultata pretrage',
+                        ),
                       ],
                     ),
                   );
@@ -246,20 +254,29 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                   itemCount: filteredExercises.length,
                   itemBuilder: (context, index) {
                     final exercise = filteredExercises[index];
+                    final isPublic = _publicExerciseIds.contains(exercise.id);
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8.0),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: const Color(0xFF808080),
-                          child: const Icon(Icons.fitness_center,
-                              color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.fitness_center,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                         title: Text(exercise.name),
                         subtitle: Text(
                           'Rekord: ${exercise.personalRecord ?? '-'} kg • Treninga: ${exercise.workoutCount} • Poslednji put: ${_formatLastDone(exercise.lastDone)}',
                         ),
-                        trailing: isGuest
-                            ? null
+                        trailing: (isGuest || isPublic)
+                            ? (isPublic
+                                  ? const Icon(
+                                      Icons.lock_outline,
+                                      color: Colors.grey,
+                                    )
+                                  : null)
                             : PopupMenuButton(
                                 onSelected: (value) {
                                   if (value == 'delete') {
@@ -273,9 +290,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                                   ),
                                 ],
                               ),
-                        onTap: () {
-                       
-                        },
+                        onTap: () {},
                       ),
                     );
                   },
@@ -313,21 +328,21 @@ class _ExerciseSearchDelegate extends SearchDelegate<String> {
 
   @override
   List<Widget> buildActions(BuildContext context) => [
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            query = '';
-          },
-        ),
-      ];
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        query = '';
+      },
+    ),
+  ];
 
   @override
   Widget buildLeading(BuildContext context) => IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          close(context, '');
-        },
-      );
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () {
+      close(context, '');
+    },
+  );
 
   @override
   Widget buildResults(BuildContext context) =>
@@ -373,4 +388,3 @@ class _ExerciseSearchDelegate extends SearchDelegate<String> {
     );
   }
 }
-

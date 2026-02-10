@@ -310,7 +310,7 @@ class FirebaseService {
   }
 
   // ===== Javne vežbe (Public Exercises) =====
-  
+
   Future<String> addPublicExercise(String name) async {
     try {
       final docRef = await _firestore.collection('publicExercises').add({
@@ -343,24 +343,33 @@ class FirebaseService {
         .collection('publicExercises')
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Exercise.fromMap(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Exercise.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<void> deletePublicExercise(String exerciseId) async {
     try {
-      await _firestore
-          .collection('publicExercises')
-          .doc(exerciseId)
-          .delete();
+      await _firestore.collection('publicExercises').doc(exerciseId).delete();
     } catch (e) {
       throw Exception('Greška pri brisanju javne vežbe: $e');
     }
   }
 
+  Future<void> updatePublicExercise(String exerciseId, String name) async {
+    try {
+      await _firestore.collection('publicExercises').doc(exerciseId).update({
+        'name': name,
+      });
+    } catch (e) {
+      throw Exception('Greška pri ažuriranju javne vežbe: $e');
+    }
+  }
+
   // ===== Javni planovi (Public Plans) =====
-  
+
   Future<String> addPublicPlan(String title) async {
     try {
       final docRef = await _firestore.collection('publicPlans').add({
@@ -395,9 +404,11 @@ class FirebaseService {
         .collection('publicPlans')
         .orderBy('title')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Plan.fromMap(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Plan.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<void> deletePublicPlan(String planId) async {
@@ -405,6 +416,16 @@ class FirebaseService {
       await _firestore.collection('publicPlans').doc(planId).delete();
     } catch (e) {
       throw Exception('Greška pri brisanju javnog plana: $e');
+    }
+  }
+
+  Future<void> updatePublicPlan(String planId, String title) async {
+    try {
+      await _firestore.collection('publicPlans').doc(planId).update({
+        'title': title,
+      });
+    } catch (e) {
+      throw Exception('Greška pri ažuriranju javnog plana: $e');
     }
   }
 }

@@ -17,6 +17,7 @@ class _PlansScreenState extends State<PlansScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   late Future<List<Plan>> _plansFuture;
   String _searchQuery = '';
+  Set<String> _publicPlanIds = {};
 
   @override
   void initState() {
@@ -27,17 +28,15 @@ class _PlansScreenState extends State<PlansScreen> {
   Future<List<Plan>> _loadPlans() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user?.id;
-    
-    // Učitaj javne planove
+
     final publicPlans = await _firebaseService.getPublicPlans();
-    
-    // Ako je korisnik prijavljen, učitaj i njegove planove
+    _publicPlanIds = publicPlans.map((plan) => plan.id).toSet();
+
     if (userId != null) {
       final userPlans = await _firebaseService.getPlans(userId);
       return [...publicPlans, ...userPlans];
     }
-    
-    // Za goste, samo javni planovi
+
     return publicPlans;
   }
 
@@ -45,6 +44,35 @@ class _PlansScreenState extends State<PlansScreen> {
     setState(() {
       _plansFuture = _loadPlans();
     });
+  }
+
+  Future<Plan> _copyPublicPlanToUser(Plan plan) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user?.id ?? '';
+
+    if (userId.isEmpty) {
+      throw Exception('Korisnik nije prijavljen.');
+    }
+
+    final newPlanId = await _firebaseService.addPlan(userId, plan.title);
+
+    for (var entry in plan.days.entries) {
+      await _firebaseService.setPlanDay(
+        userId,
+        newPlanId,
+        entry.key,
+        entry.value.name,
+        entry.value.exerciseIds,
+      );
+    }
+
+    return Plan(
+      id: newPlanId,
+      title: plan.title,
+      days: Map<String, PlanDay>.from(plan.days),
+      isActive: false,
+      createdAt: DateTime.now(),
+    );
   }
 
   void _showAddPlanDialog() {
@@ -60,9 +88,7 @@ class _PlansScreenState extends State<PlansScreen> {
           controller: controller,
           decoration: InputDecoration(
             hintText: 'Naziv plana (npr. PPL Split)',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         actions: [
@@ -86,9 +112,9 @@ class _PlansScreenState extends State<PlansScreen> {
                   );
                 } catch (e) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Greška: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Greška: $e')));
                 }
               }
             },
@@ -102,8 +128,9 @@ class _PlansScreenState extends State<PlansScreen> {
   void _showEditPlanDialog(Plan plan) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user?.id ?? '';
-    final TextEditingController controller =
-        TextEditingController(text: plan.title);
+    final TextEditingController controller = TextEditingController(
+      text: plan.title,
+    );
 
     showDialog(
       context: context,
@@ -113,9 +140,7 @@ class _PlansScreenState extends State<PlansScreen> {
           controller: controller,
           decoration: InputDecoration(
             hintText: 'Naziv plana',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         actions: [
@@ -128,11 +153,13 @@ class _PlansScreenState extends State<PlansScreen> {
               backgroundColor: const Color(0xFF808080),
             ),
             onPressed: () async {
-              if (controller.text.isNotEmpty &&
-                  controller.text != plan.title) {
+              if (controller.text.isNotEmpty && controller.text != plan.title) {
                 try {
                   await _firebaseService.updatePlan(
-                      userId, plan.id, controller.text);
+                    userId,
+                    plan.id,
+                    controller.text,
+                  );
                   if (!context.mounted) return;
                   Navigator.pop(context);
                   _refreshPlans();
@@ -141,9 +168,9 @@ class _PlansScreenState extends State<PlansScreen> {
                   );
                 } catch (e) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Greška: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Greška: $e')));
                 }
               } else {
                 Navigator.pop(context);
@@ -159,21 +186,21 @@ class _PlansScreenState extends State<PlansScreen> {
   void _deletePlan(String planId) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user?.id ?? '';
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Brisanje plana'),
-        content: const Text('Da li ste sigurni da želite da obrišete ovaj plan?'),
+        content: const Text(
+          'Da li ste sigurni da želite da obrišete ovaj plan?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Ne'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               try {
                 await _firebaseService.deletePlan(userId, planId);
@@ -185,9 +212,9 @@ class _PlansScreenState extends State<PlansScreen> {
                 );
               } catch (e) {
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Greška: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Greška: $e')));
               }
             },
             child: const Text('Obriši'),
@@ -200,7 +227,7 @@ class _PlansScreenState extends State<PlansScreen> {
   void _toggleActivePlan(Plan plan) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user?.id ?? '';
-    
+
     try {
       if (plan.isActive) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -217,9 +244,9 @@ class _PlansScreenState extends State<PlansScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Greška: $e')));
     }
   }
 
@@ -308,8 +335,9 @@ class _PlansScreenState extends State<PlansScreen> {
 
                 final plans = snapshot.data ?? [];
                 final filteredPlans = plans
-                    .where((plan) =>
-                        plan.title.toLowerCase().contains(_searchQuery))
+                    .where(
+                      (plan) => plan.title.toLowerCase().contains(_searchQuery),
+                    )
                     .toList();
 
                 if (filteredPlans.isEmpty) {
@@ -317,12 +345,17 @@ class _PlansScreenState extends State<PlansScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.calendar_today,
-                            size: 64, color: Colors.grey),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 16),
-                        Text(_searchQuery.isEmpty
-                            ? 'Nema planova. Dodaj novi!'
-                            : 'Nema rezultata pretrage'),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Nema planova. Dodaj novi!'
+                              : 'Nema rezultata pretrage',
+                        ),
                       ],
                     ),
                   );
@@ -334,6 +367,7 @@ class _PlansScreenState extends State<PlansScreen> {
                   itemBuilder: (context, index) {
                     final plan = filteredPlans[index];
                     final totalExercises = _getTotalExercises(plan);
+                    final isPublic = _publicPlanIds.contains(plan.id);
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8.0),
@@ -360,7 +394,9 @@ class _PlansScreenState extends State<PlansScreen> {
                             if (plan.isActive)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.green,
                                   borderRadius: BorderRadius.circular(12),
@@ -380,67 +416,180 @@ class _PlansScreenState extends State<PlansScreen> {
                           '${plan.days.length} dana • $totalExercises vežbi',
                           style: const TextStyle(fontSize: 13),
                         ),
-                        trailing: PopupMenuButton(
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'edit':
-                                _showEditPlanDialog(plan);
-                                break;
-                              case 'activate':
-                                _toggleActivePlan(plan);
-                                break;
-                              case 'delete':
-                                _deletePlan(plan.id);
-                                break;
-                            }
-                          },
-                          itemBuilder: (BuildContext context) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Izmeni'),
+                        trailing: isGuest
+                            ? null
+                            : PopupMenuButton(
+                                onSelected: (value) async {
+                                  switch (value) {
+                                    case 'edit':
+                                      if (isPublic) {
+                                        try {
+                                          final userPlan =
+                                              await _copyPublicPlanToUser(plan);
+                                          if (!mounted) return;
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PlanDetailScreen(
+                                                    plan: userPlan,
+                                                    userId:
+                                                        userProvider.user!.id,
+                                                  ),
+                                            ),
+                                          ).then((_) => _refreshPlans());
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Greška: $e'),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        _showEditPlanDialog(plan);
+                                      }
+                                      break;
+                                    case 'activate':
+                                      if (isPublic) {
+                                        try {
+                                          final userPlan =
+                                              await _copyPublicPlanToUser(plan);
+                                          if (!mounted) return;
+                                          _toggleActivePlan(userPlan);
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Greška: $e'),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        _toggleActivePlan(plan);
+                                      }
+                                      break;
+                                    case 'delete':
+                                      _deletePlan(plan.id);
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Izmeni'),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!plan.isActive)
+                                    const PopupMenuItem(
+                                      value: 'activate',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.check_circle, size: 18),
+                                          SizedBox(width: 8),
+                                          Text('Postavi aktivnim'),
+                                        ],
+                                      ),
+                                    ),
+                                  if (!isPublic)
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.delete,
+                                            size: 18,
+                                            color: Colors.red,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Obriši',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
-                            ),
-                            if (!plan.isActive)
-                              const PopupMenuItem(
-                                value: 'activate',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.check_circle, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('Postavi aktivnim'),
-                                  ],
+                        onTap: () async {
+                          if (isGuest) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Prijavite se da biste menjali planove.',
                                 ),
                               ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, size: 18, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Obriši',
-                                      style: TextStyle(color: Colors.red)),
+                            );
+                            return;
+                          }
+
+                          if (isPublic) {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Kopiraj plan'),
+                                content: const Text(
+                                  'Kopirati ovaj javni plan u tvoje planove kako bi ga izmenio?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('Otkaži'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text('Kopiraj'),
+                                  ),
                                 ],
                               ),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          final userProvider = Provider.of<UserProvider>(context, listen: false);
+                            );
+
+                            if (confirmed != true) return;
+
+                            try {
+                              final userPlan = await _copyPublicPlanToUser(
+                                plan,
+                              );
+                              if (!mounted) return;
+                              final userId = userProvider.user?.id ?? '';
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PlanDetailScreen(
+                                    plan: userPlan,
+                                    userId: userId,
+                                  ),
+                                ),
+                              ).then((_) => _refreshPlans());
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Greška: $e')),
+                              );
+                            }
+                            return;
+                          }
+
                           final userId = userProvider.user?.id ?? '';
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => PlanDetailScreen(
-                                plan: plan,
-                                userId: userId,
-                              ),
+                              builder: (context) =>
+                                  PlanDetailScreen(plan: plan, userId: userId),
                             ),
-                          );
+                          ).then((_) => _refreshPlans());
                         },
                       ),
                     );

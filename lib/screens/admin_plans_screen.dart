@@ -40,7 +40,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     try {
       await _firebaseService.addPublicPlan(_titleController.text.trim());
       _titleController.clear();
-      
+
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,10 +52,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Greška: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -83,7 +80,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
 
     try {
       await _firebaseService.deletePublicPlan(planId);
-      
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -94,12 +91,65 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Greška: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
       );
     }
+  }
+
+  void _showEditPlanDialog(Plan plan) {
+    final TextEditingController controller = TextEditingController(
+      text: plan.title,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Izmeni plan'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Naziv plana'),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Otkaži'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newTitle = controller.text.trim();
+              if (newTitle.isEmpty || newTitle == plan.title) {
+                Navigator.pop(context);
+                return;
+              }
+
+              try {
+                await _firebaseService.updatePublicPlan(plan.id, newTitle);
+
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Plan je izmenjen'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Greška: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Sačuvaj'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAddPlanDialog() {
@@ -122,10 +172,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Otkaži'),
           ),
-          TextButton(
-            onPressed: _addPlan,
-            child: const Text('Dodaj'),
-          ),
+          TextButton(onPressed: _addPlan, child: const Text('Dodaj')),
         ],
       ),
     );
@@ -179,13 +226,45 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  leading: const Icon(Icons.assignment,
-                      color: Color(0xFF808080)),
+                  leading: const Icon(
+                    Icons.assignment,
+                    color: Color(0xFF808080),
+                  ),
                   title: Text(plan.title),
                   subtitle: const Text('Javni plan'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _deletePlan(plan.id, plan.title),
+                  trailing: PopupMenuButton(
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'edit':
+                          _showEditPlanDialog(plan);
+                          break;
+                        case 'delete':
+                          _deletePlan(plan.id, plan.title);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 18),
+                            SizedBox(width: 8),
+                            Text('Izmeni'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Obriši', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
