@@ -17,6 +17,7 @@ import 'screens/sessions_screen.dart';
 import 'screens/exercises_screen.dart';
 import 'screens/body_metrics_screen.dart';
 import 'screens/stats_screen.dart';
+import 'screens/weather_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,7 @@ class MyApp extends StatelessWidget {
           '/sessions': (context) => const SessionsScreen(), // Gost može videti
           '/exercises': (context) => const ExercisesScreen(), // Gost može videti
           '/body-metrics': (context) => AuthenticatedRoute(builder: (_) => const BodyMetricsScreen()),
+          '/weather': (context) => const WeatherScreen(), // Gost može videti
           '/stats': (context) => const StatsScreen(), // Gost može videti
           // Admin rute - pristup samo za admin korisnike
           '/admin': (context) => AdminRoute(builder: (_) => const AdminScreen()),

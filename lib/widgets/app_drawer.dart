@@ -117,6 +117,14 @@ class AppDrawer extends StatelessWidget {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.wb_sunny),
+                title: const Text('Vreme'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacementNamed(context, '/weather');
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.bar_chart),
                 title: const Text('Statistika'),
                 onTap: () {
