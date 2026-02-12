@@ -122,7 +122,8 @@ class _StatsScreenState extends State<StatsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statistika'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
       ),
       drawer: const AppDrawer(),
       body: FutureBuilder<_StatsData>(
@@ -141,7 +142,8 @@ class _StatsScreenState extends State<StatsScreen> {
                   const SizedBox(height: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: _refreshStats,
                     child: const Text('Pokušaj ponovo'),
@@ -316,7 +318,8 @@ class _ExerciseStatItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF808080),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Colors.white,
           child: const Icon(
             Icons.fitness_center,
             color: Colors.white,

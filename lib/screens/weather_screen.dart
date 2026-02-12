@@ -13,7 +13,7 @@ class WeatherScreen extends StatefulWidget {
 class _WeatherScreenState extends State<WeatherScreen> {
   final WeatherService _weatherService = WeatherService();
   final TextEditingController _cityController = TextEditingController(
-    text: 'Belgrade',
+    text: 'Novi Sad',
   );
   Weather? _weather;
   bool _isLoading = false;
@@ -49,10 +49,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Vremenska prognoza'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        elevation: 0,
       ),
       drawer: const AppDrawer(),
       body: SingleChildScrollView(
@@ -62,18 +66,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Card(
-                color: Colors.blue[50],
+                color: colorScheme.secondaryContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[700]),
+                      Icon(Icons.info_outline, color: colorScheme.secondary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Proveri vreme pre outdoor treninga',
                           style: TextStyle(
-                            color: Colors.blue[900],
+                            color: colorScheme.onSecondaryContainer,
                             fontSize: 14,
                           ),
                         ),
@@ -103,19 +107,19 @@ class _WeatherScreenState extends State<WeatherScreen> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _loadWeather,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.all(16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Icon(Icons.search, color: Colors.white),
+                    child: const Icon(Icons.search),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
-            
               if (_isLoading)
                 const Center(
                   child: Padding(
@@ -154,7 +158,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
                               icon: const Icon(Icons.refresh),
                               label: const Text('Pokušaj ponovo'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF808080),
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
                               ),
                             ),
                           ],
@@ -166,9 +171,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               else if (_weather != null)
                 _buildWeatherCard(_weather!)
               else
-                const Center(
-                  child: Text('Unesite grad za prikaz vremena'),
-                ),
+                const Center(child: Text('Unesite grad za prikaz vremena')),
             ],
           ),
         ),
@@ -178,10 +181,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   Widget _buildWeatherCard(Weather weather) {
     final recommendation = WeatherService.getWorkoutRecommendation(weather);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
-  
         Card(
           elevation: 4,
           shape: RoundedRectangleBorder(
@@ -192,10 +195,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF808080),
-                  const Color(0xFF606060),
-                ],
+                colors: [colorScheme.primaryContainer, colorScheme.primary],
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -203,7 +203,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-          
                   Text(
                     weather.cityName,
                     style: const TextStyle(
@@ -322,13 +321,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Last updated
         Text(
           'Ažurirano: ${_formatTime(weather.timestamp)}',
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-          ),
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
       ],
     );
@@ -345,10 +340,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.white70,
-          ),
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
         const SizedBox(height: 2),
         Text(

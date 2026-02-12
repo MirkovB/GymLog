@@ -8,6 +8,8 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         final user = userProvider.user;
@@ -17,11 +19,11 @@ class AppDrawer extends StatelessWidget {
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF808080), Color(0xFF606060)],
+                    colors: [colorScheme.primary, colorScheme.primaryContainer],
                   ),
                 ),
                 child: Column(
@@ -37,9 +39,9 @@ class AppDrawer extends StatelessWidget {
                     Text(
                       user?.displayName ?? user?.email ?? 'GymLog',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (user != null) ...[
@@ -74,8 +76,7 @@ class AppDrawer extends StatelessWidget {
                   ],
                 ),
               ),
-              
-              // Glavni meni
+
               ListTile(
                 leading: const Icon(Icons.home),
                 title: const Text('Početna'),
@@ -133,9 +134,7 @@ class AppDrawer extends StatelessWidget {
                 },
               ),
 
-              // Admin panel - samo za admin korisnike
-              if (user != null && user.role == UserRole.admin)
-                ...<Widget>[
+              if (user != null && user.role == UserRole.admin) ...<Widget>[
                 const Divider(),
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -149,7 +148,10 @@ class AppDrawer extends StatelessWidget {
                   ),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.admin_panel_settings, color: Colors.red),
+                  leading: const Icon(
+                    Icons.admin_panel_settings,
+                    color: Colors.red,
+                  ),
                   title: const Text('Admin Panel'),
                   onTap: () {
                     Navigator.pop(context);
@@ -160,7 +162,6 @@ class AppDrawer extends StatelessWidget {
 
               const Divider(),
 
-              // Odjava
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: const Text('Odjavi se'),

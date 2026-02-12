@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../providers/user_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,13 +31,21 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _authService.signIn(
+      final userModel = await _authService.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
       if (!mounted) return;
-      
+
+      // Direktno setujemo korisnika u provider umesto čekanja na auth state changes
+      if (userModel != null) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        userProvider.setUser(userModel);
+      }
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Uspešno ste se prijavili!'),
@@ -69,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
-    
+
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -83,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.resetPassword(email);
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Link za resetovanje lozinke je poslat na vaš email.'),
@@ -138,10 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     const Text(
                       'Prijavite se na svoj nalog',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 40),
 
@@ -168,8 +175,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Unesite email adresu.';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                    .hasMatch(value)) {
+                                if (!RegExp(
+                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                ).hasMatch(value)) {
                                   return 'Neispravan format email adrese.';
                                 }
                                 return null;
@@ -223,7 +231,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleLogin,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF808080),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -237,8 +247,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Colors.white,
-                                          ),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : const Text(
@@ -279,7 +289,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     TextButton.icon(
                       onPressed: _navigateAsGuest,
-                      icon: const Icon(Icons.person_outline, color: Colors.white),
+                      icon: const Icon(
+                        Icons.person_outline,
+                        color: Colors.white,
+                      ),
                       label: const Text(
                         'Nastavi kao gost',
                         style: TextStyle(color: Colors.white),

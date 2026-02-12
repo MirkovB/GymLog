@@ -62,7 +62,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isGuest ? 'Treninzi (Pregled)' : 'Treninzi'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       drawer: const AppDrawer(),
       body: Column(
@@ -88,85 +88,98 @@ class _SessionsScreenState extends State<SessionsScreen> {
           Expanded(
             child: FutureBuilder<List<Workout>>(
               future: _workoutsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Greška: ${snapshot.error}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
-                    ),
-                    onPressed: _refreshWorkouts,
-                    child: const Text('Pokušaj ponovo'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final workouts = snapshot.data ?? [];
-
-          if (workouts.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.fitness_center,
-                      size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('Nema treninga. Započni novi!'),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: workouts.length,
-            itemBuilder: (context, index) {
-              final workout = workouts[index];
-              final exerciseCount = workout.exercises.length;
-                final duration = _formatDuration(workout);
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12.0),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF808080),
-                    child: const Icon(Icons.fitness_center,
-                        color: Colors.white),
-                  ),
-                  title: Text(workout.dayName),
-                  subtitle: Text(
-                    '${workout.date.day}.${workout.date.month}.${workout.date.year} • $exerciseCount vežbi • $duration',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    final userProvider = Provider.of<UserProvider>(context, listen: false);
-                    final userId = userProvider.user?.id ?? '';
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WorkoutDetailScreen(
-                          workout: workout,
-                          userId: userId,
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Greška: ${snapshot.error}'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: _refreshWorkouts,
+                          child: const Text('Pokušaj ponovo'),
                         ),
+                      ],
+                    ),
+                  );
+                }
+
+                final workouts = snapshot.data ?? [];
+
+                if (workouts.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.fitness_center,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Nema treninga. Započni novi!'),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: workouts.length,
+                  itemBuilder: (context, index) {
+                    final workout = workouts[index];
+                    final exerciseCount = workout.exercises.length;
+                    final duration = _formatDuration(workout);
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12.0),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          child: const Icon(
+                            Icons.fitness_center,
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Text(workout.dayName),
+                        subtitle: Text(
+                          '${workout.date.day}.${workout.date.month}.${workout.date.year} • $exerciseCount vežbi • $duration',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          final userProvider = Provider.of<UserProvider>(
+                            context,
+                            listen: false,
+                          );
+                          final userId = userProvider.user?.id ?? '';
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WorkoutDetailScreen(
+                                workout: workout,
+                                userId: userId,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
             ),
           ),
         ],
@@ -175,7 +188,10 @@ class _SessionsScreenState extends State<SessionsScreen> {
           ? null
           : FloatingActionButton.extended(
               onPressed: () {
-                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                final userProvider = Provider.of<UserProvider>(
+                  context,
+                  listen: false,
+                );
                 final userId = userProvider.user?.id ?? '';
                 Navigator.push(
                   context,
@@ -184,7 +200,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   ),
                 ).then((_) => _refreshWorkouts());
               },
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               icon: Icon(
                 StartWorkoutScreen.hasDraft()
                     ? Icons.play_circle_fill

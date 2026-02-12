@@ -71,7 +71,8 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               if (controller.text.isNotEmpty) {
@@ -142,7 +143,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isGuest ? 'Vežbe (Pregled)' : 'Vežbe'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -210,7 +211,10 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF808080),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            foregroundColor: Colors.white,
                           ),
                           onPressed: _refreshExercises,
                           child: const Text('Pokušaj ponovo'),
@@ -259,7 +263,9 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                       margin: const EdgeInsets.only(bottom: 8.0),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF808080),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           child: const Icon(
                             Icons.fitness_center,
                             color: Colors.white,
@@ -304,7 +310,8 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           ? null
           : FloatingActionButton(
               onPressed: _showAddExerciseDialog,
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
               child: const Icon(Icons.add),
             ),
     );

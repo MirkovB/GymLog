@@ -6,11 +6,9 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-
   User? get currentUser => _auth.currentUser;
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-
 
   Future<UserModel?> register({
     required String email,
@@ -18,7 +16,6 @@ class AuthService {
     String? displayName,
   }) async {
     try {
-  
       if (password.length < 8) {
         throw Exception('Lozinka mora imati najmanje 8 karaktera.');
       }
@@ -32,7 +29,6 @@ class AuthService {
       if (!_isValidEmail(email)) {
         throw Exception('Neispravan format email adrese.');
       }
-
 
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -57,7 +53,15 @@ class AuthService {
         lastLogin: DateTime.now(),
       );
 
+      // Čuvamo podatke u Firestore
       await _firestore.collection('users').doc(user.uid).set(userModel.toMap());
+
+      // Verifikujemo da je dokument zaista sačuvan
+      await Future.delayed(const Duration(milliseconds: 300));
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      if (!doc.exists) {
+        throw Exception('Neuspešno čuvanje podataka korisnika.');
+      }
 
       return userModel;
     } on FirebaseAuthException catch (e) {
@@ -73,7 +77,8 @@ class AuthService {
             throw Exception('Greška pri prijavljivanju.');
           }
 
-          if (displayName != null && (user.displayName == null || user.displayName!.isEmpty)) {
+          if (displayName != null &&
+              (user.displayName == null || user.displayName!.isEmpty)) {
             await user.updateDisplayName(displayName);
           }
 
@@ -90,6 +95,9 @@ class AuthService {
               .collection('users')
               .doc(user.uid)
               .set(userModel.toMap(), SetOptions(merge: true));
+
+          // Verifikujemo da je dokument zaista sačuvan
+          await Future.delayed(const Duration(milliseconds: 300));
 
           return userModel;
         } on FirebaseAuthException catch (signInError) {
@@ -139,8 +147,10 @@ class AuthService {
 
   Future<UserModel?> getUserData(String userId) async {
     try {
-      DocumentSnapshot doc =
-          await _firestore.collection('users').doc(userId).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .get();
 
       if (!doc.exists) {
         return null;
@@ -153,11 +163,7 @@ class AuthService {
   }
 
   Stream<UserModel?> watchUserData(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .map((doc) {
+    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
       if (!doc.exists) return null;
       return UserModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
     });
@@ -173,10 +179,7 @@ class AuthService {
     }
   }
 
-
-  Future<void> updateProfile({
-    String? displayName,
-  }) async {
+  Future<void> updateProfile({String? displayName}) async {
     try {
       User? user = currentUser;
       if (user == null) throw Exception('Korisnik nije prijavljen.');
@@ -204,10 +207,8 @@ class AuthService {
 
   Future<void> deleteUser(String userId) async {
     try {
-  
       await _firestore.collection('users').doc(userId).delete();
-      
-    
+
       await _deleteUserData(userId);
     } catch (e) {
       throw Exception('Greška pri brisanju korisnika: $e');
@@ -303,7 +304,10 @@ class AuthService {
   }
 
   Stream<List<UserModel>> watchAllUsers() {
-    return _firestore.collection('users').snapshots().map(
+    return _firestore
+        .collection('users')
+        .snapshots()
+        .map(
           (snapshot) => snapshot.docs
               .map((doc) => UserModel.fromMap(doc.data(), doc.id))
               .toList(),

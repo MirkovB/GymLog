@@ -188,8 +188,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
         stream: _exercisesStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF808080)),
+            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
             );
           }
 
@@ -217,7 +216,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
                     icon: const Icon(Icons.add),
                     label: const Text('Dodaj prvu vežbu'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -233,9 +232,7 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.fitness_center,
-                    color: Color(0xFF808080),
+                  leading: Icon(Icons.fitness_center, color: Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(exercise.name),
                   subtitle: const Text('Javna vežba'),
@@ -281,9 +278,11 @@ class _AdminExercisesScreenState extends State<AdminExercisesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddExerciseDialog,
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 }
+
+

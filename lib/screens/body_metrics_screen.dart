@@ -75,7 +75,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF808080),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
               onPressed: () async {
                 final raw = controller.text.trim().replaceAll(',', '.');
@@ -122,7 +122,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Telesne Mere'),
-          backgroundColor: const Color(0xFF808080),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
         body: const Center(
           child: Text('Morate biti prijavljeni da biste pristupili ovoj stranici.'),
@@ -133,7 +133,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Telesne Mere'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       drawer: const AppDrawer(),
       body: StreamBuilder<List<BodyMetric>>(
@@ -152,7 +152,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                   const SizedBox(height: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     onPressed: () => setState(() {}),
                     child: const Text('Pokušaj ponovo'),
@@ -173,10 +173,10 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                   padding: const EdgeInsets.all(20.0),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.monitor_weight,
                         size: 48,
-                        color: Color(0xFF808080),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -195,7 +195,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                               style: Theme.of(context).textTheme.headlineMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF808080),
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                             ),
                             if (latest != null)
@@ -211,7 +211,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                         icon: const Icon(Icons.add),
                         label: const Text('Unesi'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF808080),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -256,7 +256,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                             margin: const EdgeInsets.only(bottom: 8.0),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: const Color(0xFF808080),
+                                backgroundColor: Theme.of(context).colorScheme.primary,
                                 child: Text(
                                   '${index + 1}',
                                   style: const TextStyle(color: Colors.white),
@@ -294,3 +294,5 @@ String _formatDate(DateTime date) {
   final year = date.year.toString();
   return '$day.$month.$year';
 }
+
+

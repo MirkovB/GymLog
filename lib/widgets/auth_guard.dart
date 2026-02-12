@@ -12,10 +12,10 @@ class AuthGuard extends StatelessWidget {
     return Consumer<UserProvider>(
       builder: (context, userProvider, _) {
         if (userProvider.isLoading) {
-          return const Scaffold(
+          return Scaffold(
             body: Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF808080),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           );
@@ -26,10 +26,10 @@ class AuthGuard extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.of(context).pushReplacementNamed('/login');
           });
-          return const Scaffold(
+          return Scaffold(
             body: Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF808080),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           );
@@ -51,3 +51,5 @@ class AuthenticatedRoute extends StatelessWidget {
     return AuthGuard(child: builder(context));
   }
 }
+
+

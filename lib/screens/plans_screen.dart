@@ -98,7 +98,8 @@ class _PlansScreenState extends State<PlansScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               if (controller.text.isNotEmpty) {
@@ -150,7 +151,8 @@ class _PlansScreenState extends State<PlansScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               if (controller.text.isNotEmpty && controller.text != plan.title) {
@@ -266,7 +268,7 @@ class _PlansScreenState extends State<PlansScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isGuest ? 'Planovi (Pregled)' : 'Planovi'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       drawer: const AppDrawer(),
       body: Column(
@@ -323,7 +325,10 @@ class _PlansScreenState extends State<PlansScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF808080),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            foregroundColor: Colors.white,
                           ),
                           onPressed: _refreshPlans,
                           child: const Text('Pokušaj ponovo'),
@@ -604,7 +609,7 @@ class _PlansScreenState extends State<PlansScreen> {
           ? null
           : FloatingActionButton(
               onPressed: _showAddPlanDialog,
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               child: const Icon(Icons.add),
             ),
     );

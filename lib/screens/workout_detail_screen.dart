@@ -40,7 +40,7 @@ class WorkoutDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalji treninga'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: FutureBuilder<List<Exercise>>(
         future: firebaseService.getExercises(userId),
@@ -106,3 +106,4 @@ class WorkoutDetailScreen extends StatelessWidget {
     );
   }
 }
+

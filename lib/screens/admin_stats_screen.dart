@@ -29,8 +29,7 @@ class _AdminStatsScreenState extends State<AdminStatsScreen> {
               stream: _authService.watchAllUsers(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF808080)),
+                  return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
                   );
                 }
 
@@ -124,3 +123,5 @@ class _AdminStatsScreenState extends State<AdminStatsScreen> {
     );
   }
 }
+
+

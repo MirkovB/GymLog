@@ -45,8 +45,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
     super.initState();
     _dataFuture = _loadData();
     _draftStartAt ??= DateTime.now();
-    _elapsedSeconds =
-        DateTime.now().difference(_draftStartAt!).inSeconds;
+    _elapsedSeconds = DateTime.now().difference(_draftStartAt!).inSeconds;
     _startTimer();
   }
 
@@ -114,7 +113,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
       'thursday',
       'friday',
       'saturday',
-      'sunday'
+      'sunday',
     ];
     return keys[now.weekday - 1];
   }
@@ -134,7 +133,8 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
   }
 
   Map<String, List<WorkoutSet>> _cloneWorkoutData(
-      Map<String, List<WorkoutSet>> source) {
+    Map<String, List<WorkoutSet>> source,
+  ) {
     final cloned = <String, List<WorkoutSet>>{};
     for (var entry in source.entries) {
       cloned[entry.key] = List<WorkoutSet>.from(entry.value);
@@ -265,7 +265,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
       }
 
       final workout = Workout(
-        id: '', 
+        id: '',
         userId: widget.userId,
         planId: _activePlan!.id,
         dayName: _selectedDayName ?? 'Dan',
@@ -303,14 +303,14 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
       if (!mounted) return;
       _clearDraft();
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trening uspešno sačuvan!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Trening uspešno sačuvan!')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Greška: $e')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -324,7 +324,8 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Otkaži trening'),
         content: const Text(
-            'Da li si siguran? Svi uneti podaci će biti obrisani.'),
+          'Da li si siguran? Svi uneti podaci će biti obrisani.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -333,6 +334,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () {
               _clearDraft();
@@ -361,7 +363,8 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Greška'),
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
             body: Center(
               child: Text('Greška pri preuzimanju podataka: ${snapshot.error}'),
@@ -369,14 +372,14 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
           );
         }
 
-        final (activePlan, exercises) =
-            snapshot.data ?? (null, <Exercise>[]);
+        final (activePlan, exercises) = snapshot.data ?? (null, <Exercise>[]);
 
         if (activePlan == null) {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Započni trening'),
-              backgroundColor: const Color(0xFF808080),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
             body: const Center(
               child: Text('Nema aktivnog plana. Postavi plan kao aktivan.'),
@@ -398,10 +401,10 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
 
         // Odredi koji je dan u nedelji
         final todayDayKey = _getDayOfWeekKey();
-        if (_selectedDayKey == null && activePlan.days.containsKey(todayDayKey)) {
+        if (_selectedDayKey == null &&
+            activePlan.days.containsKey(todayDayKey)) {
           _selectedDayKey = todayDayKey;
-          _selectedDayName =
-              activePlan.days[todayDayKey]?.name ?? 'Dan';
+          _selectedDayName = activePlan.days[todayDayKey]?.name ?? 'Dan';
           _initializeDayWorkouts(todayDayKey);
           _saveDraft();
         }
@@ -409,7 +412,8 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Započni trening'),
-            backgroundColor: const Color(0xFF808080),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
             actions: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -429,8 +433,10 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
           body: Column(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 color: Colors.grey[100],
                 child: Row(
                   children: [
@@ -447,8 +453,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                       icon: Icon(
                         _isTimerRunning ? Icons.pause : Icons.play_arrow,
                       ),
-                      onPressed:
-                          _isTimerRunning ? _pauseTimer : _resumeTimer,
+                      onPressed: _isTimerRunning ? _pauseTimer : _resumeTimer,
                     ),
                     IconButton(
                       tooltip: 'Reset',
@@ -458,7 +463,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                   ],
                 ),
               ),
-              
+
               Container(
                 color: Colors.grey[200],
                 child: SingleChildScrollView(
@@ -502,13 +507,12 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                     padding: const EdgeInsets.all(16.0),
                     itemCount:
                         activePlan.days[_selectedDayKey]?.exerciseIds.length ??
-                            0,
+                        0,
                     itemBuilder: (context, index) {
                       final exerciseId =
                           activePlan.days[_selectedDayKey]!.exerciseIds[index];
-                        final exercise = _findExerciseById(exerciseId);
-                        final exerciseName =
-                          exercise?.name ?? 'Nepoznata vezba';
+                      final exercise = _findExerciseById(exerciseId);
+                      final exerciseName = exercise?.name ?? 'Nepoznata vezba';
                       final sets = _workoutData[exerciseId] ?? [];
 
                       return Card(
@@ -533,8 +537,9 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                                     itemBuilder: (context, setIndex) {
                                       final set = sets[setIndex];
                                       return Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 12.0),
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12.0,
+                                        ),
                                         child: Row(
                                           children: [
                                             Expanded(
@@ -543,57 +548,65 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                                                     TextInputType.number,
                                                 decoration: InputDecoration(
                                                   hintText: 'Ponavljanja',
-                                                  border:
-                                                      OutlineInputBorder(
+                                                  border: OutlineInputBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            8),
+                                                          8,
+                                                        ),
                                                   ),
                                                 ),
                                                 onChanged: (value) {
                                                   final reps =
                                                       int.tryParse(value) ?? 0;
-                                                  _updateSet(exerciseId,
-                                                      setIndex, reps, set.weight);
+                                                  _updateSet(
+                                                    exerciseId,
+                                                    setIndex,
+                                                    reps,
+                                                    set.weight,
+                                                  );
                                                 },
-                                                controller: TextEditingController(
-                                                  text: set.reps > 0
-                                                      ? set.reps.toString()
-                                                      : '',
-                                                ),
+                                                controller:
+                                                    TextEditingController(
+                                                      text: set.reps > 0
+                                                          ? set.reps.toString()
+                                                          : '',
+                                                    ),
                                               ),
                                             ),
                                             const SizedBox(width: 8),
                                             Expanded(
                                               child: TextField(
                                                 keyboardType:
-                                                    const TextInputType
-                                                        .numberWithOptions(
-                                                        decimal: true),
+                                                    const TextInputType.numberWithOptions(
+                                                      decimal: true,
+                                                    ),
                                                 decoration: InputDecoration(
                                                   hintText: 'kg',
-                                                  border:
-                                                      OutlineInputBorder(
+                                                  border: OutlineInputBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            8),
+                                                          8,
+                                                        ),
                                                   ),
                                                 ),
                                                 onChanged: (value) {
                                                   final weight =
                                                       double.tryParse(value) ??
-                                                          0.0;
+                                                      0.0;
                                                   _updateSet(
-                                                      exerciseId,
-                                                      setIndex,
-                                                      set.reps,
-                                                      weight);
+                                                    exerciseId,
+                                                    setIndex,
+                                                    set.reps,
+                                                    weight,
+                                                  );
                                                 },
-                                                controller: TextEditingController(
-                                                  text: set.weight > 0
-                                                      ? set.weight.toString()
-                                                      : '',
-                                                ),
+                                                controller:
+                                                    TextEditingController(
+                                                      text: set.weight > 0
+                                                          ? set.weight
+                                                                .toString()
+                                                          : '',
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -607,8 +620,10 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                                       Expanded(
                                         child: ElevatedButton.icon(
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color(0xFF808080),
+                                            backgroundColor: const Color(
+                                              0xFF808080,
+                                            ),
+                                            foregroundColor: Colors.white,
                                           ),
                                           onPressed: () => _addSet(exerciseId),
                                           icon: const Icon(Icons.add),
@@ -638,9 +653,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                 )
               else
                 const Expanded(
-                  child: Center(
-                    child: Text('Izaberi dan da počneš'),
-                  ),
+                  child: Center(child: Text('Izaberi dan da počneš')),
                 ),
             ],
           ),
@@ -652,6 +665,7 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: _showCancelDialog,
@@ -662,7 +676,8 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: _isLoading ? null : _saveWorkout,
@@ -673,7 +688,8 @@ class _StartWorkoutScreenState extends State<StartWorkoutScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white),
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text('Završi trening'),

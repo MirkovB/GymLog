@@ -185,8 +185,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
         stream: _plansStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF808080)),
+            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
             );
           }
 
@@ -210,7 +209,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                     icon: const Icon(Icons.add),
                     label: const Text('Dodaj prvi plan'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF808080),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -226,9 +225,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.assignment,
-                    color: Color(0xFF808080),
+                  leading: Icon(Icons.assignment, color: Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(plan.title),
                   subtitle: const Text('Javni plan'),
@@ -274,9 +271,11 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddPlanDialog,
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 }
+
+

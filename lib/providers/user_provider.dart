@@ -35,8 +35,26 @@ class UserProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      _user = await _authService.getUserData(userId);
-      
+      // Retry logika za učitavanje podataka iz Firestore-a
+      // jer može postojati latencija nakon registracije
+      UserModel? userData;
+      int retries = 0;
+      const maxRetries = 5;
+
+      while (retries < maxRetries && userData == null) {
+        try {
+          userData = await _authService.getUserData(userId);
+          if (userData != null) break;
+        } catch (e) {
+          // Ako dokument ne postoji, sačekamo malo i pokušamo ponovo
+          if (retries < maxRetries - 1) {
+            await Future.delayed(Duration(milliseconds: 500 * (retries + 1)));
+          }
+        }
+        retries++;
+      }
+
+      _user = userData;
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -51,6 +69,13 @@ class UserProvider extends ChangeNotifier {
     if (userId != null) {
       await _loadUserData(userId);
     }
+  }
+
+  // Direktno setuje korisnika bez čekanja na auth state changes
+  void setUser(UserModel user) {
+    _user = user;
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> signOut() async {

@@ -7,11 +7,7 @@ class PlanDetailScreen extends StatefulWidget {
   final Plan plan;
   final String userId;
 
-  const PlanDetailScreen({
-    super.key,
-    required this.plan,
-    required this.userId,
-  });
+  const PlanDetailScreen({super.key, required this.plan, required this.userId});
 
   @override
   State<PlanDetailScreen> createState() => _PlanDetailScreenState();
@@ -31,7 +27,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     'Četvrtak',
     'Petak',
     'Subota',
-    'Nedelja'
+    'Nedelja',
   ];
 
   final List<String> _weekDaysKeys = [
@@ -41,14 +37,14 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     'thursday',
     'friday',
     'saturday',
-    'sunday'
+    'sunday',
   ];
 
   @override
   void initState() {
     super.initState();
     _days = Map.from(widget.plan.days);
-    
+
     // Inicijalizuj sve dane čak i ako nisu u planu
     for (int i = 0; i < _weekDaysKeys.length; i++) {
       final dayKey = _weekDaysKeys[i];
@@ -56,7 +52,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
         _days[dayKey] = PlanDay(name: '', exerciseIds: []);
       }
     }
-    
+
     // Učitaj javne i korisničke vežbe
     _exercisesFuture = _loadAllExercises();
     _dayTitleControllers = {};
@@ -98,9 +94,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
         future: _exercisesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const AlertDialog(
-              content: CircularProgressIndicator(),
-            );
+            return const AlertDialog(content: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -163,7 +157,11 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
   }
 
   void _removeExerciseFromDay(
-      String dayKey, String dayLabel, String exerciseId, String exerciseName) {
+    String dayKey,
+    String dayLabel,
+    String exerciseId,
+    String exerciseName,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -177,6 +175,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () {
               if (_days.containsKey(dayKey)) {
@@ -233,9 +232,9 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri čuvanju: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Greška pri čuvanju: $e')));
     }
   }
 
@@ -244,7 +243,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.plan.title),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -261,6 +260,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                   : ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
                       ),
                       onPressed: _saveAllDays,
                       icon: const Icon(Icons.save, size: 18),
@@ -276,8 +276,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
         itemBuilder: (context, index) {
           final dayLabel = _weekDays[index];
           final dayKey = _weekDaysKeys[index];
-          final dayExercises =
-              _days[dayKey]?.exerciseIds ?? <String>[];
+          final dayExercises = _days[dayKey]?.exerciseIds ?? <String>[];
 
           return Card(
             margin: const EdgeInsets.only(bottom: 12.0),
@@ -288,10 +287,10 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                 children: [
                   Text(
                     dayLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF808080),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -306,7 +305,6 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                   ),
                   const SizedBox(height: 12),
 
-   
                   if (dayExercises.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -354,7 +352,9 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                                 ),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: const Color(0xFF808080),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                     radius: 20,
                                     child: const Icon(
                                       Icons.fitness_center,
@@ -367,8 +367,11 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.close,
-                                        color: Colors.red, size: 20),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
                                     onPressed: () {
                                       _removeExerciseFromDay(
                                         dayKey,
@@ -386,16 +389,15 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                       ),
                     ),
 
-              
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF808080),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      onPressed: () =>
-                          _showAddExerciseDialog(dayKey, dayLabel),
+                      onPressed: () => _showAddExerciseDialog(dayKey, dayLabel),
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text('Dodaj vežbu'),
                     ),

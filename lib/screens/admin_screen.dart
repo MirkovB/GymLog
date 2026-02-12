@@ -48,7 +48,7 @@ class _AdminScreenState extends State<AdminScreen> {
           onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
         ),
         title: const Text('Admin Panel'),
-        backgroundColor: const Color(0xFF808080),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
           Padding(
@@ -71,7 +71,7 @@ class _AdminScreenState extends State<AdminScreen> {
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF808080),
+        selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         items: _tabs
             .map(
@@ -100,3 +100,4 @@ class AdminTab {
     required this.screen,
   });
 }
+

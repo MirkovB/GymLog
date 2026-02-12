@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../providers/user_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -40,13 +42,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      await _authService.register(
+      final userModel = await _authService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         displayName: _displayNameController.text.trim().isEmpty
             ? null
             : _displayNameController.text.trim(),
       );
+
+      if (!mounted) return;
+
+      // Direktno setujemo korisnika u provider umesto čekanja na auth state changes
+      if (userModel != null) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        userProvider.setUser(userModel);
+      }
 
       if (!mounted) return;
 
@@ -57,8 +67,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
 
-      Navigator.pushReplacementNamed(context, '/home');
-
+      // Vraćamo se na root (AuthWrapper) koji će automatski detektovati
+      // da je korisnik ulogovan i odvesti ga na HomeScreen
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,10 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 8),
                     const Text(
                       'Registrujte se da biste koristili sve funkcije',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
@@ -183,8 +191,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Unesite email adresu.';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                    .hasMatch(value)) {
+                                if (!RegExp(
+                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                ).hasMatch(value)) {
                                   return 'Neispravan format email adrese.';
                                 }
                                 return null;
@@ -269,7 +278,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const SizedBox(height: 16),
                             ],
 
-      
                             TextFormField(
                               controller: _confirmPasswordController,
                               obscureText: _obscureConfirmPassword,
@@ -311,7 +319,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleRegister,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF808080),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -325,8 +335,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Colors.white,
-                                          ),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : const Text(
